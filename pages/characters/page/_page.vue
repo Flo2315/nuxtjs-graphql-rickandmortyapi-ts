@@ -9,7 +9,7 @@
     </div>
     <div class="grid grid-flow-row-dense md:grid-cols-3 grid-cols-2 gap-4">
       <template v-for="character in characters.results">
-        <CharacterCard :key="character.id" :character="character" />
+        <character-card :key="character.id" :character="character" />
       </template>
     </div>
 
@@ -20,18 +20,15 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Context } from '@nuxt/types'
+import { Component, Vue } from 'nuxt-property-decorator'
 import gql from 'graphql-tag'
 
-export default {
-  transition(to, from) {
-    if (!from) {
-      return 'slide-left'
-    }
-    return +to.params.page < +from.params.page ? 'slide-right' : 'slide-left'
-  },
-  async asyncData({ app, params }) {
-    const result = await app.apolloProvider.defaultClient.query({
+@Component
+export default class CharactersPage extends Vue {
+  async asyncData({ app, params }: Context) {
+    const result = await app?.apolloProvider?.defaultClient.query({
       query: gql`
         query getCharacters($page: Int) {
           characters(page: $page) {
@@ -67,7 +64,17 @@ export default {
       },
     })
 
-    return result.data
-  },
+    return result?.data
+  }
+
+  transition(
+    to: { params: { page: string | number } },
+    from: { params: { page: string | number } }
+  ): string {
+    if (!from) {
+      return 'slide-left'
+    }
+    return +to.params.page < +from.params.page ? 'slide-right' : 'slide-left'
+  }
 }
 </script>

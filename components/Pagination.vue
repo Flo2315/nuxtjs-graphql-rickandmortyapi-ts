@@ -104,34 +104,22 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'Pagination',
-  props: {
-    info: {
-      type: Object,
-      required: true,
-      default: () => {
-        return {}
-      },
-    },
-    charactersNumberInPage: {
-      type: Number,
-      required: true,
-    },
-    baseUrl: {
-      type: String,
-      default: '/characters/page',
-    },
-  },
-  computed: {
-    eltMin() {
-      if (this.$route.params.page === 1) return 1
-      return (this.$route.params.page - 1) * 20 + 1
-    },
-    eltMax() {
-      return this.eltMin - 1 + this.charactersNumberInPage
-    },
-  },
+<script lang="ts">
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
+
+@Component
+export default class Pagination extends Vue {
+  @Prop({ type: Object, default: {}, required: true }) info!: object
+  @Prop({ type: Number, required: true }) charactersNumberInPage!: number
+  @Prop({ type: String, default: '/characters/page' }) baseUrl!: string
+
+  get eltMin(): number {
+    if (parseInt(this.$route.params.page) === 1) return 1
+    return (parseInt(this.$route.params.page) - 1) * 20 + 1
+  }
+
+  get eltMax(): number {
+    return this.eltMin - 1 + this.charactersNumberInPage
+  }
 }
 </script>

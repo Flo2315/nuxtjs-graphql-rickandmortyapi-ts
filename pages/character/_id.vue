@@ -7,9 +7,9 @@
         Character detail
       </h3>
     </div>
-    <div class="flex items-center items-stretch mb-8">
+    <div class="flex items-stretch mb-8">
       <div class="w-1/2 mr-1">
-        <CharacterCard :character="character" :link-more="false" />
+        <character-card :character="character" :link-more="false" />
       </div>
       <div
         class="w-1/2 ml-1 text-center border-t border-r border-b border-l border-gray-400 bg-white rounded-b rounded-r rounded-l flex"
@@ -23,22 +23,19 @@
         </div>
       </div>
     </div>
-    <EpisodesTable :episodes="character.episode" />
+    <episodes-table :episodes="character.episode" />
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Context } from '@nuxt/types'
+import { Component, Vue } from 'nuxt-property-decorator'
 import gql from 'graphql-tag'
 
-export default {
-  transition(to, from) {
-    if (!from) {
-      return 'slide-left'
-    }
-    return +to.params.id < +from.params.id ? 'slide-right' : 'slide-left'
-  },
-  async asyncData({ app, params }) {
-    const result = await app.apolloProvider.defaultClient.query({
+@Component
+export default class CharacterPage extends Vue {
+  async asyncData({ app, params }: Context) {
+    const result = await app?.apolloProvider?.defaultClient.query({
       query: gql`
         query getCharacter($id: ID!) {
           character(id: $id) {
@@ -77,7 +74,17 @@ export default {
       },
     })
 
-    return result.data
-  },
+    return result?.data
+  }
+
+  transition(
+    to: { params: { id: string | number } },
+    from: { params: { id: string | number } }
+  ): string {
+    if (!from) {
+      return 'slide-left'
+    }
+    return +to.params.id < +from.params.id ? 'slide-right' : 'slide-left'
+  }
 }
 </script>

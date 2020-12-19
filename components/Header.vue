@@ -126,13 +126,11 @@
   </nav>
 </template>
 
-<script>
-export default {
-  name: 'Header',
-  data() {
-    return {
-      mobileOpen: false,
-    }
-  },
+<script lang="ts">
+import { Component, Vue } from 'nuxt-property-decorator'
+
+@Component
+export default class Header extends Vue {
+  mobileOpen: boolean = false
 }
 </script>

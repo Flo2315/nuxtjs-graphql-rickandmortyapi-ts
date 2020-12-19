@@ -81,21 +81,15 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'EpisodesTable',
-  props: {
-    episodes: {
-      type: Array,
-      default: () => {
-        return []
-      },
-    },
-  },
-  methods: {
-    lastCharacters(characters) {
-      return characters.slice(0, 20)
-    },
-  },
+<script lang="ts">
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
+
+@Component
+export default class EpisodesTable extends Vue {
+  @Prop({ type: Array, default: [] }) episodes!: Array<object>
+
+  lastCharacters(characters: Array<object>): Array<object> {
+    return characters.slice(0, 20)
+  }
 }
 </script>

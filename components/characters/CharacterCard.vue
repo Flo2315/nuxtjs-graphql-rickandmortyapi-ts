@@ -36,20 +36,12 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'CharacterCard',
-  props: {
-    character: {
-      type: Object,
-      default: () => {
-        return {}
-      },
-    },
-    linkMore: {
-      type: Boolean,
-      default: true,
-    },
-  },
+<script lang="ts">
+import { Component, Prop, Vue } from 'nuxt-property-decorator'
+
+@Component
+export default class CharacterCard extends Vue {
+  @Prop({ type: Object, default: {} }) character!: object
+  @Prop({ type: Boolean, default: true }) linkMore!: boolean
 }
 </script>

@@ -116,62 +116,74 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Component, Vue } from 'nuxt-property-decorator'
 import gql from 'graphql-tag'
 import Multiselect from 'vue-multiselect'
 
-export default {
-  transition(to, from) {
+interface CharacterInterface {
+  id: number | string
+  name: string
+  image: string
+}
+
+@Component({
+  components: {
+    Multiselect,
+  },
+})
+export default class HomePage extends Vue {
+  title: string = 'Product Categories'
+  selectedCharacter: object | null = null
+  optionsCharacters: Array<CharacterInterface> = []
+  isLoading: boolean = false
+
+  async asyncFind(query?: string): Promise<void> {
+    if (query?.length === 0) {
+      this.optionsCharacters = []
+      return
+    }
+
+    this.isLoading = true
+    const result = await this.$apollo
+      .query({
+        query: gql`
+          query getCharacters($filter: FilterCharacter) {
+            characters(filter: $filter) {
+              results {
+                id
+                name
+                image
+              }
+            }
+          }
+        `,
+        variables: {
+          filter: { name: query },
+        },
+      })
+      .catch(() => {
+        this.isLoading = false
+        this.optionsCharacters = []
+      })
+
+    if (result) this.optionsCharacters = result.data.characters.results
+    this.isLoading = false
+  }
+
+  redirect(selectedOption: CharacterInterface): void {
+    this.$router.push(`/character/${selectedOption.id}`)
+  }
+
+  transition(
+    to: { params: { page: string | number } },
+    from: { params: { page: string | number } }
+  ): string {
     if (!from) {
       return 'slide-left'
     }
     return +to.params.page < +from.params.page ? 'slide-right' : 'slide-left'
-  },
-  components: { Multiselect },
-  data() {
-    return {
-      selectedCharacter: null,
-      optionsCharacters: [],
-      isLoading: false,
-    }
-  },
-  methods: {
-    async asyncFind(query) {
-      if (query.length === 0) {
-        this.optionsCharacters = []
-        return
-      }
-
-      this.isLoading = true
-      const result = await this.$apollo
-        .query({
-          query: gql`
-            query getCharacters($filter: FilterCharacter) {
-              characters(filter: $filter) {
-                results {
-                  id
-                  name
-                  image
-                }
-              }
-            }
-          `,
-          variables: {
-            filter: { name: query },
-          },
-        })
-        .catch((e) => {
-          this.isLoading = false
-          this.optionsCharacters = []
-        })
-
-      if (result) this.optionsCharacters = result.data.characters.results
-      this.isLoading = false
-    },
-    redirect(selectedOption) {
-      this.$router.push(`/character/${selectedOption.id}`)
-    },
-  },
+  }
 }
 </script>
 

@@ -8,7 +8,7 @@
       </h3>
     </div>
 
-    <EpisodesTable :episodes="episodes.results" />
+    <episodes-table :episodes="episodes.results" />
 
     <client-only>
       <infinite-loading
@@ -19,17 +19,45 @@
   </div>
 </template>
 
-<script>
+<script lang="ts">
+import { Context } from '@nuxt/types'
+import { Component, Vue } from 'nuxt-property-decorator'
 import gql from 'graphql-tag'
+
+interface DataInterface {
+  page: Number
+  episodes: EpisodesInterface
+}
+
+interface EpisodesInterface {
+  info: InfoPage
+  results: Array<ResultData>
+}
+
+interface InfoPage {
+  pages: number
+}
+
+interface ResultData {
+  id: number
+  name: string
+  episode: string
+  // eslint-disable-next-line camelcase
+  air_date: string
+  characters: Array<Character>
+}
+
+interface Character {
+  id: number
+  name: string
+  image: string
+}
 
 const query = gql`
   query getEpisode($page: Int) {
     episodes(page: $page) {
       info {
         pages
-        count
-        next
-        prev
       }
       results {
         id
@@ -45,53 +73,61 @@ const query = gql`
     }
   }
 `
+@Component
+export default class EpisodesPage extends Vue implements DataInterface {
+  page: number = 1
+  episodes!: EpisodesInterface
 
-export default {
-  transition(to, from) {
-    if (!from) {
-      return 'slide-left'
-    }
-    return +to.params.page < +from.params.page ? 'slide-right' : 'slide-left'
-  },
-  async asyncData({ app, params }) {
+  async asyncData({ app }: Context): Promise<DataInterface> {
     const page = 1
-    const result = await app.apolloProvider.defaultClient.query({
+    const result = await app?.apolloProvider?.defaultClient.query({
       query,
       variables: {
-        page: parseInt(page),
+        page,
       },
     })
 
-    const { episodes } = result.data
+    const { episodes } = result?.data
     return {
       episodes,
       page,
     }
-  },
-  methods: {
-    infiniteScroll($state) {
-      setTimeout(async () => {
-        this.page++
-        if (this.page <= this.episodes.info.pages) {
-          const result = await this.$apollo.query({
-            query,
-            variables: {
-              page: this.page,
-            },
-          })
+  }
 
-          const { results } = result.data.episodes
-          if (results.length > 0) {
-            results.forEach((item) => this.episodes.results.push(item))
-            $state.loaded()
-          } else {
-            $state.complete()
-          }
+  transition(
+    to: { params: { page: string | number } },
+    from: { params: { page: string | number } }
+  ): string {
+    if (!from) {
+      return 'slide-left'
+    }
+    return +to.params.page < +from.params.page ? 'slide-right' : 'slide-left'
+  }
+
+  infiniteScroll($state: { loaded: () => void; complete: () => void }): void {
+    setTimeout(async () => {
+      this.page++
+      if (this.page <= this.episodes.info.pages) {
+        const result = await this.$apollo.query({
+          query,
+          variables: {
+            page: this.page,
+          },
+        })
+
+        const { results } = result.data.episodes
+        if (results.length > 0) {
+          results.forEach((item: ResultData) =>
+            this.episodes.results.push(item)
+          )
+          $state.loaded()
         } else {
           $state.complete()
         }
-      }, 500)
-    },
-  },
+      } else {
+        $state.complete()
+      }
+    }, 500)
+  }
 }
 </script>
